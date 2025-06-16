@@ -61,6 +61,7 @@
       border: 1px solid #d1d5db;
       margin-bottom: 1rem;
       transition: border 0.2s ease;
+      text-align: center;
     }
 
     input[type="number"]:focus {
@@ -95,8 +96,8 @@
 <body>
   <div class="card">
     <h1>🚀 LOLL Tokens</h1>
-    <p>Enter the number of tokens to mint:</p>
-    <input id="mintAmount" type="number" placeholder="e.g., 100" />
+    <p>You can only mint <strong>1 token</strong> at a time.</p>
+    <input id="mintAmount" type="number" value="1" readonly />
     <button onclick="mintTokens()">Mint</button>
     <div class="status" id="walletStatus">🔌 Connecting to wallet...</div>
   </div>
@@ -146,8 +147,9 @@
       const amount = document.getElementById("mintAmount").value;
       const parsedAmount = parseInt(amount);
 
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        alert("Please enter a valid number.");
+      // Since input is readonly and fixed at 1, this is just a double check:
+      if (parsedAmount !== 1) {
+        alert("You can only mint exactly 1 token at a time.");
         return;
       }
 
@@ -159,7 +161,7 @@
 
       try {
         await contract.methods.mintFunction(parsedAmount).send({ from: account });
-        alert(`✅ Successfully minted ${amount} MINT tokens!`);
+        alert(`✅ Successfully minted 1 MINT token!`);
       } catch (error) {
         console.error("❌ Minting Error:", error);
 
