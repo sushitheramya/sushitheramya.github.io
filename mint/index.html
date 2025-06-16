@@ -2,179 +2,176 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LOLL Tokens</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LOLL Coin Minting Page</title>
 
+  <!-- Google Font: Gloria Hallelujah -->
+  <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&display=swap" rel="stylesheet">
+
+  <style>
     body {
+      font-family: Arial, sans-serif;
       margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #a78bfa, #7c3aed);
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
     }
 
-    .card {
-      background: white;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 420px;
+    #content {
       text-align: center;
-      animation: fadeIn 0.5s ease-in-out;
+      padding: 30px;
+      background-color: rgba(255, 255, 255, 0.75);
+      border-radius: 10px;
+      max-width: 400px;
     }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    h1, label {
+      font-family: 'Gloria Hallelujah', cursive;
     }
 
-    h1 {
-      margin-bottom: 0.5rem;
-      font-size: 1.75rem;
-      color: #111827;
-    }
-
-    p {
-      margin-bottom: 1rem;
-      color: #4b5563;
+    label {
+      display: block;
+      margin-top: 20px;
+      font-size: 18px;
     }
 
     input[type="number"] {
-      width: 100%;
-      padding: 0.75rem;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      margin-bottom: 1rem;
-      transition: border 0.2s ease;
-      text-align: center;
-    }
-
-    input[type="number"]:focus {
-      outline: none;
-      border-color: #7c3aed;
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+      background-color: orange;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+      width: 250px;
     }
 
     button {
-      width: 100%;
-      background: #7c3aed;
-      color: white;
-      border: none;
-      padding: 0.75rem;
-      border-radius: 8px;
-      font-size: 1rem;
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+      background-color: orange;
+      border: 2px solid #aaa;
+      border-radius: 5px;
       cursor: pointer;
-      font-weight: 600;
-      transition: background 0.2s ease;
     }
 
-    button:hover {
-      background: #6d28d9;
+    #walletInfo {
+      font-family: Arial, sans-serif;
+      margin-top: 30px;
     }
 
-    .status {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      color: #10b981;
+    @keyframes flashYellow {
+      0%, 90%, 100% { color: black; }
+      95% { color: yellow; }
+    }
+
+    #footer {
+      font-family: 'Gloria Hallelujah', cursive;
+      font-size: 28px;
+      position: fixed;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      pointer-events: none;
     }
   </style>
-</head>
-<body>
-  <div class="card">
-    <h1>🚀 LOLL Tokens</h1>
-  <p>You can only mint 1 token at a time.</p>
-<input id="mintAmount" type="number" value="1" readonly />
 
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+          integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+          crossorigin="anonymous"></script>
+  <script src="./mintABI.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.5.0/ethers.umd.min.js"
+          type="application/javascript"></script>
+</head>
+
+<body onload="checkWallet()">
+  <div id="content">
+    <h1>Lorax Coin Minting Page</h1>
+
+    <label for="tokenAmount">How many tokens to mint?</label>
+    <input type="number" id="tokenAmount" min="10" max="100" placeholder="Enter 10–100" />
+    <br>
     <button onclick="mintTokens()">Mint</button>
-    <div class="status" id="walletStatus">🔌 Connecting to wallet...</div>
+
+    <section id="walletInfo">
+      <b>Wallet connection: </b><br>
+      <span id="walletStatus" style="color:red">Checking for a wallet connection...</span><br>
+      <button onclick="checkWallet()" id="walletButton">Connect wallet</button>    
+    </section>
+
+    <h3><span id="responseMessage" style="color:blue"></span></h3>
   </div>
 
-  <!-- Import Web3.js and ABI -->
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
-  <script src="mintABI.js"></script>
-
   <script>
-    let web3;
-    let contract;
-    let account;
+    var myWallet;
+    var myContract;
+    var provider;
+    var signer;
 
-    window.addEventListener("load", async () => {
-      if (window.ethereum) {
-        try {
-          web3 = new Web3(window.ethereum);
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
+    async function checkWallet() {
+      var accountList = await ethereum.request({ method: 'eth_accounts' });
+      myWallet = accountList[0];
 
-          const accounts = await web3.eth.getAccounts();
-          account = accounts[0];
-
-          if (typeof mintABI === "undefined" || typeof mintContractAddress === "undefined") {
-            console.error("🚫 ABI or contract address not loaded. Check mintABI.js.");
-            document.getElementById("walletStatus").innerText = "❌ ABI or contract address missing.";
-            return;
-          }
-
-          contract = new web3.eth.Contract(mintABI, mintContractAddress);
-
-          console.log("✅ Wallet Connected:", account);
-          console.log("✅ Contract Address:", mintContractAddress);
-          console.log("✅ ABI Loaded:", mintABI?.length ? "Yes" : "No");
-
-          document.getElementById("walletStatus").innerText = "✅ Wallet Connected: " + account;
-        } catch (err) {
-          console.error("⚠️ Wallet connection failed:", err);
-          document.getElementById("walletStatus").innerText = "❌ Wallet connection failed";
-        }
-      } else {
-        alert("Please install MetaMask.");
-        document.getElementById("walletStatus").innerText = "❌ MetaMask not found.";
+      if (!myWallet) {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        accountList = await ethereum.request({ method: 'eth_accounts' });
+        myWallet = accountList[0];
       }
-    });
+
+      if (!myWallet) {
+        document.getElementById('walletStatus').innerHTML = "Click here to connect a crypto wallet:";
+        document.getElementById('walletButton').hidden = false;
+      } else {
+        document.getElementById('walletStatus').innerHTML = "&#x2713; Your crypto wallet is connected. <br>";
+        document.getElementById('walletStatus').style.color = "#0000FF";
+        document.getElementById("walletButton").hidden = true;
+      }
+
+      contractConnect();
+    }
+
+    async function contractConnect() {
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      myContract = new ethers.Contract(mintContractAddress, mintABI, provider);
+      signer = provider.getSigner();
+
+      var supply = await myContract.totalSupply();
+      console.log("supply=" + supply + " tokenAddr:" + mintContractAddress);
+    }
 
     async function mintTokens() {
-      const amount = document.getElementById("mintAmount").value;
-      const parsedAmount = parseInt(amount);
-
-      // Since input is readonly and fixed at 1, this is just a double check:
-      if (parsedAmount !== 1) {
-        alert("You can only mint exactly 1 token at a time.");
+      var mintAmount = parseInt(document.getElementById('tokenAmount').value);
+      if (!mintAmount || mintAmount < 10) {
+        document.getElementById('responseMessage').innerHTML = "You must mint at least 10 tokens at a time.";
         return;
       }
-
-      if (!contract) {
-        alert("❌ Contract not initialized. Please refresh the page.");
-        console.error("Contract is undefined.");
+      if (mintAmount > 100) {
+        document.getElementById('responseMessage').innerHTML = "You cannot mint over 100 tokens at a time.";
         return;
       }
 
       try {
-        await contract.methods.mintFunction(parsedAmount).send({ from: account });
-        alert(`✅ Successfully minted 1 MINT token!`);
+        const contractWithSigner = myContract.connect(signer);
+        const tx = await contractWithSigner.mintFunction(mintAmount);
+        const receipt = await tx.wait();
+        console.log(`Transaction successful with hash: ${receipt.transactionHash}`);
+        document.getElementById('responseMessage').innerHTML = "✅ Tokens minted!";
       } catch (error) {
-        console.error("❌ Minting Error:", error);
-
-        if (error?.data?.message) {
-          console.error("Revert Reason:", error.data.message);
-        } else if (error?.message) {
-          console.error("Error Message:", error.message);
-        }
-
-        alert("❌ Error minting tokens. See console.");
+        console.error("Error calling mintFunction:", error);
+        document.getElementById('responseMessage').innerHTML = `❌ Error: ${error.message}`;
       }
     }
   </script>
+
+
 </body>
 </html>
+
+
+
+   
