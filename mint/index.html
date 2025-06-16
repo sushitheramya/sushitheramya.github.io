@@ -112,16 +112,33 @@
 
     window.addEventListener("load", async () => {
       if (window.ethereum) {
-        web3 = new Web3(window.ethereum);
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        try {
+          web3 = new Web3(window.ethereum);
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-        const accounts = await web3.eth.getAccounts();
-        account = accounts[0];
+          const accounts = await web3.eth.getAccounts();
+          account = accounts[0];
 
-        contract = new web3.eth.Contract(mintABI, mintContractAddress);
-        document.getElementById("walletStatus").innerText = "✅ Wallet Connected: " + account;
+          if (typeof mintABI === "undefined" || typeof mintContractAddress === "undefined") {
+            console.error("🚫 ABI or contract address not loaded. Check mintABI.js.");
+            document.getElementById("walletStatus").innerText = "❌ ABI or contract address missing.";
+            return;
+          }
+
+          contract = new web3.eth.Contract(mintABI, mintContractAddress);
+
+          console.log("✅ Wallet Connected:", account);
+          console.log("✅ Contract Address:", mintContractAddress);
+          console.log("✅ ABI Loaded:", mintABI?.length ? "Yes" : "No");
+
+          document.getElementById("walletStatus").innerText = "✅ Wallet Connected: " + account;
+        } catch (err) {
+          console.error("⚠️ Wallet connection failed:", err);
+          document.getElementById("walletStatus").innerText = "❌ Wallet connection failed";
+        }
       } else {
         alert("Please install MetaMask.");
+        document.getElementById("walletStatus").innerText = "❌ MetaMask not found.";
       }
     });
 
@@ -134,23 +151,26 @@
         return;
       }
 
+      if (!contract) {
+        alert("❌ Contract not initialized. Please refresh the page.");
+        console.error("Contract is undefined.");
+        return;
+      }
+
       try {
         await contract.methods.mintFunction(parsedAmount).send({ from: account });
         alert(`✅ Successfully minted ${amount} MINT tokens!`);
-      } 
-      catch (error) {
-  console.error("Minting Error:", error);
+      } catch (error) {
+        console.error("❌ Minting Error:", error);
 
-  // Try to extract reason from the RPC error
-  if (error?.data?.message) {
-    console.error("Revert Reason:", error.data.message);
-  } else if (error?.message) {
-    console.error("Error Message:", error.message);
-  }
+        if (error?.data?.message) {
+          console.error("Revert Reason:", error.data.message);
+        } else if (error?.message) {
+          console.error("Error Message:", error.message);
+        }
 
-  alert("❌ Error minting tokens. See console.");
-}
-
+        alert("❌ Error minting tokens. See console.");
+      }
     }
   </script>
 </body>
