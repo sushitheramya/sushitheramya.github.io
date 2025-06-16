@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOLL Tokens</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #a78bfa, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .card {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      margin-bottom: 0.5rem;
+      font-size: 1.75rem;
+      color: #111827;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: #4b5563;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      margin-bottom: 1rem;
+      transition: border 0.2s ease;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #7c3aed;
+    }
+
+    button {
+      width: 100%;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background: #6d28d9;
+    }
+
+    .status {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #10b981;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🚀 LOLL Tokens</h1>
+    <p>Enter the number of tokens to mint:</p>
+    <input id="mintAmount" type="number" placeholder="e.g., 100" />
+    <button onclick="mintTokens()">Mint</button>
+    <div class="status" id="walletStatus">🔌 Connecting to wallet...</div>
+  </div>
+
+  <!-- Import Web3.js and ABI -->
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+  <script src="mintABI.js"></script>
+
+  <script>
+    let web3;
+    let contract;
+    let account;
+
+    window.addEventListener("load", async () => {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        const accounts = await web3.eth.getAccounts();
+        account = accounts[0];
+
+        contract = new web3.eth.Contract(mintABI, mintContractAddress);
+        document.getElementById("walletStatus").innerText = "✅ Wallet Connected: " + account;
+      } else {
+        alert("Please install MetaMask.");
+      }
+    });
+
+    async function mintTokens() {
+      const amount = document.getElementById("mintAmount").value;
+      const parsedAmount = parseInt(amount);
+
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        alert("Please enter a valid number.");
+        return;
+      }
+
+      try {
+        await contract.methods.mintFunction(parsedAmount).send({ from: account });
+        alert(`✅ Successfully minted ${amount} MINT tokens!`);
+      } catch (error) {
+        console.error(error);
+        alert("❌ Error minting tokens. See console.");
+      }
+    }
+  </script>
+</body>
+</html>
