@@ -63,10 +63,7 @@
       margin-top: 30px;
     }
 
-    @keyframes flashYellow {
-      0%, 90%, 100% { color: black; }
-      95% { color: yellow; }
-    }
+
 
     #footer {
       font-family: 'Gloria Hallelujah', cursive;
@@ -146,12 +143,12 @@
 
     async function mintTokens() {
       var mintAmount = parseInt(document.getElementById('tokenAmount').value);
-      if (!mintAmount || mintAmount < 10) {
-        document.getElementById('responseMessage').innerHTML = "You must mint at least 10 tokens at a time.";
+      if (!mintAmount || mintAmount < 1) {
+        document.getElementById('responseMessage').innerHTML = "You must mint at least 1 token at a time.";
         return;
       }
-      if (mintAmount > 100) {
-        document.getElementById('responseMessage').innerHTML = "You cannot mint over 100 tokens at a time.";
+      if (mintAmount > 1) {
+        document.getElementById('responseMessage').innerHTML = "You cannot mint over 1 token at a time.";
         return;
       }
 
