@@ -16,6 +16,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      background: #f9f9f9;
     }
 
     #content {
@@ -24,6 +25,7 @@
       background-color: rgba(255, 255, 255, 0.75);
       border-radius: 10px;
       max-width: 400px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
     h1, label {
@@ -36,6 +38,7 @@
       font-size: 18px;
     }
 
+    /* Changed input style to readonly for single mint */
     input[type="number"] {
       margin-top: 10px;
       padding: 10px;
@@ -45,6 +48,12 @@
       border: 2px solid #ccc;
       border-radius: 5px;
       width: 250px;
+      text-align: center;
+    }
+
+    input[type="number"]:read-only {
+      background-color: #f0a500;
+      cursor: not-allowed;
     }
 
     button {
@@ -56,14 +65,17 @@
       border: 2px solid #aaa;
       border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #e69500;
     }
 
     #walletInfo {
       font-family: Arial, sans-serif;
       margin-top: 30px;
     }
-
-
 
     #footer {
       font-family: 'Gloria Hallelujah', cursive;
@@ -87,10 +99,11 @@
 
 <body onload="checkWallet()">
   <div id="content">
-    <h1>Lorax Coin Minting Page</h1>
+    <h1>LOLL Coin Minting Page</h1>
 
     <label for="tokenAmount">How many tokens to mint?</label>
-    <input type="number" id="tokenAmount" min="10" max="100" placeholder="Enter 10–100" />
+    <!-- Only allow minting 1 token -->
+    <input type="number" id="tokenAmount" min="1" max="1" value="1" readonly />
     <br>
     <button onclick="mintTokens()">Mint</button>
 
@@ -110,6 +123,12 @@
     var signer;
 
     async function checkWallet() {
+      if (!window.ethereum) {
+        document.getElementById('walletStatus').innerText = "No Ethereum wallet detected. Please install MetaMask.";
+        document.getElementById('walletButton').hidden = true;
+        return;
+      }
+
       var accountList = await ethereum.request({ method: 'eth_accounts' });
       myWallet = accountList[0];
 
@@ -143,21 +162,20 @@
 
     async function mintTokens() {
       var mintAmount = parseInt(document.getElementById('tokenAmount').value);
-      if (!mintAmount || mintAmount < 1) {
-        document.getElementById('responseMessage').innerHTML = "You must mint at least 1 token at a time.";
-        return;
-      }
-      if (mintAmount > 1) {
-        document.getElementById('responseMessage').innerHTML = "You cannot mint over 1 token at a time.";
+
+      // Enforce mintAmount === 1
+      if (mintAmount !== 1) {
+        document.getElementById('responseMessage').innerHTML = "You can only mint exactly 1 token at a time.";
         return;
       }
 
       try {
         const contractWithSigner = myContract.connect(signer);
+        // Replace mintFunction with your actual contract mint method name
         const tx = await contractWithSigner.mintFunction(mintAmount);
         const receipt = await tx.wait();
         console.log(`Transaction successful with hash: ${receipt.transactionHash}`);
-        document.getElementById('responseMessage').innerHTML = "✅ Tokens minted!";
+        document.getElementById('responseMessage').innerHTML = "✅ Token minted!";
       } catch (error) {
         console.error("Error calling mintFunction:", error);
         document.getElementById('responseMessage').innerHTML = `❌ Error: ${error.message}`;
@@ -165,10 +183,6 @@
     }
   </script>
 
-
 </body>
 </html>
 
-
-
-   
