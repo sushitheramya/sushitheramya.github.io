@@ -174,15 +174,14 @@
         // Replace mintFunction with your actual contract mint method name
         const tx = await contractWithSigner.mintFunction(mintAmount);
         const receipt = await tx.wait();
-        console.log(`Transaction successful with hash: ${receipt.transactionHash}`);
+        console.log(Transaction successful with hash: ${receipt.transactionHash});
         document.getElementById('responseMessage').innerHTML = "✅ Token minted!";
       } catch (error) {
         console.error("Error calling mintFunction:", error);
-        document.getElementById('responseMessage').innerHTML = `❌ Error: ${error.message}`;
+        document.getElementById('responseMessage').innerHTML = ❌ Error: ${error.message};
       }
     }
   </script>
 
 </body>
 </html>
-
