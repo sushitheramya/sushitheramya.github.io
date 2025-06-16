@@ -137,10 +137,20 @@
       try {
         await contract.methods.mintFunction(parsedAmount).send({ from: account });
         alert(`✅ Successfully minted ${amount} MINT tokens!`);
-      } catch (error) {
-        console.error(error);
-        alert("❌ Error minting tokens. See console.");
-      }
+      } 
+      catch (error) {
+  console.error("Minting Error:", error);
+
+  // Try to extract reason from the RPC error
+  if (error?.data?.message) {
+    console.error("Revert Reason:", error.data.message);
+  } else if (error?.message) {
+    console.error("Error Message:", error.message);
+  }
+
+  alert("❌ Error minting tokens. See console.");
+}
+
     }
   </script>
 </body>
