@@ -329,4 +329,3 @@ const mintABI = [
 		"type": "function"
 	}
 ]
-				
